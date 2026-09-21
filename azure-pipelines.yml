@@ -1,0 +1,31 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+- stage: Terraform_Validate
+  jobs:
+  - job: Validate
+    steps:
+    - script: terraform init
+    - script: terraform validate
+
+- stage: Terraform_Plan
+  dependsOn: Terraform_Validate
+  jobs:
+  - job: Plan
+    steps:
+    - script: terraform plan -var-file="terraform/dev.tfvars"
+
+- stage: Terraform_Apply
+  dependsOn: Terraform_Plan
+  jobs:
+  - deployment: Apply
+    environment: dev
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - script: terraform apply -auto-approve -var-file="terraform/dev.tfvars"
